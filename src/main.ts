@@ -1,6 +1,13 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { AppComponent } from './app/app.component';
+import { API_BASE_URL } from './app/api-base.token';
+import { environment } from './environments/environment';
+import 'zone.js';
 
-bootstrapApplication(App, appConfig)
-  .catch((err) => console.error(err));
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient(withInterceptors([])),
+    { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
+  ],
+}).catch((err) => console.error('Bootstrap error:', err));

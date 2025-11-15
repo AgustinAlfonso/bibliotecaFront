@@ -1,0 +1,140 @@
+<div class="wrap">
+  <!-- Banner de diagnóstico -->
+  <div *ngIf="!apiStatus().ok" class="api-banner" role="alert" aria-live="assertive">
+    {{ apiStatus().msg }}
+    <small>Revisá CORS, la URL base y que el backend esté arriba.</small>
+  </div>
+
+  <header class="topbar">
+    <h1>📚 Biblioteca</h1>
+
+    <div class="filters">
+      <!-- Buscador (título o autor) -->
+      <div class="search">
+        <label for="search-input">Buscar</label>
+        <input
+          id="search-input"
+          type="text"
+          [value]="search()"
+          (input)="onSearchInput($any($event.target).value)"
+          placeholder="Título o autor…"
+          autocomplete="off"
+          aria-label="Buscar libros por título o autor"
+        />
+        <button
+          *ngIf="search()"
+          class="clear-x"
+          (click)="clearSearch()"
+          aria-label="Limpiar búsqueda"
+          type="button">✕</button>
+      </div>
+
+      <!-- Género -->
+      <div class="ac">
+        <label for="genre-select">Género</label>
+        <select
+          id="genre-select"
+          [disabled]="taxoLoading() || genres().length === 0"
+          [value]="genreFilter()"
+          (change)="onGenreChange($event)"
+          aria-label="Filtrar por género">
+          <option value="">Todos</option>
+          <option *ngFor="let g of genres(); trackBy: trackByText" [value]="g">{{ g }}</option>
+        </select>
+        <button
+          *ngIf="genreFilter()"
+          class="clear-x"
+          (click)="clearGenre()"
+          aria-label="Limpiar filtro de género"
+          type="button">✕</button>
+      </div>
+    </div>
+
+    <div class="meta">
+      <span>Pág. {{ currentPage() }} · Mostrando {{ visibleBooks().length }} / {{ total() | number }}</span>
+    </div>
+  </header>
+
+  <!-- A–Z + # : filtro server-side por primera letra del TÍTULO -->
+  <div class="azbar" role="toolbar" aria-label="Filtro por letra inicial">
+    <button
+      *ngFor="let l of letters"
+      (click)="toggleLetter(l)"
+      [class.active]="letterFilter() === l"
+      [attr.aria-pressed]="letterFilter() === l"
+      type="button"
+      [attr.aria-label]="'Filtrar por letra ' + l">
+      {{ l }}
+    </button>
+    <button
+      *ngIf="letterFilter()"
+      class="clear"
+      (click)="clearLetter()"
+      aria-label="Limpiar filtro de letra"
+      type="button">Limpiar</button>
+  </div>
+
+  <div #scroller class="scroller" role="region" aria-label="Lista de libros" tabindex="0">
+    <table class="grid" *ngIf="visibleBooks().length || loading()">
+      <thead>
+      <tr>
+        <th scope="col">Título</th>
+        <th scope="col">Autor</th>
+        <th scope="col">Género</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let b of visibleBooks(); trackBy: trackById">
+        <td>
+          <div class="download-container">
+            <button
+              type="button"
+              class="download-btn"
+              (click)="toggleDownloadMenu(b.id, $event)"
+              [attr.aria-expanded]="openDownloadMenu() === b.id"
+              [attr.aria-label]="'Opciones de descarga para ' + b.title">
+              {{ b.title }}
+              <span class="download-icon">▼</span>
+            </button>
+            <div
+              *ngIf="openDownloadMenu() === b.id"
+              class="download-menu"
+              (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="download-option"
+                (click)="downloadEpub(b.id, b.filename, $event)"
+                [attr.aria-label]="'Descargar ' + b.title + ' en formato EPUB'">
+                📖 Descargar EPUB
+              </button>
+              <button
+                type="button"
+                class="download-option"
+                (click)="downloadPdf(b.id, b.filename, $event)"
+                [attr.aria-label]="'Descargar ' + b.title + ' en formato PDF'">
+                📄 Descargar PDF
+              </button>
+            </div>
+          </div>
+        </td>
+        <td>{{ b.author ?? '—' }}</td>
+        <td>{{ b.genre ?? '—' }}</td>
+      </tr>
+
+      <!-- Skeleton -->
+      <tr *ngIf="loading()" class="sk" aria-hidden="true">
+        <td colspan="3">
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="status" *ngIf="!visibleBooks().length && !loading()" role="status" aria-live="polite">
+      Sin resultados
+    </div>
+    <div #bottomSentinel class="sentinel" aria-hidden="true"></div>
+  </div>
+</div>

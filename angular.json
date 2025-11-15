@@ -44,7 +44,14 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true
             },
             "development": {
               "optimization": false,
@@ -56,6 +63,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "ssl": false,
+            "allowedHosts": ["all"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "biblioteca:build:production"
@@ -87,5 +99,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "6373e81c-d024-46fa-8807-69634cc7bce2"
   }
 }

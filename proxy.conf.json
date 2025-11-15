@@ -1,0 +1,5 @@
+{
+  "/api":        { "target": "http://192.168.245.1:8081", "secure": false, "changeOrigin": true },
+  "/books.json": { "target": "http://192.168.245.1:8081", "secure": false, "changeOrigin": true },
+  "/book":       { "target": "http://192.168.245.1:8081", "secure": false, "changeOrigin": true }
+}
