@@ -176,6 +176,7 @@
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   table-layout: fixed;
+  position: relative;
 }
 
 th,
@@ -193,6 +194,8 @@ td {
 td:first-child {
   white-space: normal;
   word-wrap: break-word;
+  overflow: visible;
+  position: relative;
 }
 
 td:nth-child(2),
@@ -288,19 +291,71 @@ a:focus-visible {
   transform: rotate(180deg);
 }
 
-.download-menu {
-  position: absolute;
-  top: 100%;
+.download-menu-wrapper {
+  position: fixed !important;
+  z-index: 10000 !important;
+  pointer-events: auto;
+}
+
+.download-menu-wrapper::before {
+  content: '';
+  position: fixed;
+  top: 0;
   left: 0;
-  margin-top: 4px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.download-menu {
+  position: relative !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 2px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10001 !important;
   min-width: 180px;
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+  isolation: isolate;
+  will-change: transform;
+  mix-blend-mode: normal !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  pointer-events: auto;
+  contain: layout style paint;
+}
+
+.download-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: #ffffff !important;
+  z-index: -1;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.download-menu::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff !important;
+  z-index: 0;
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 @keyframes slideDown {
@@ -318,13 +373,16 @@ a:focus-visible {
   display: block;
   width: 100%;
   padding: 10px 16px;
-  background: none;
+  background: #fff !important;
   border: none;
   text-align: left;
   cursor: pointer;
   color: #333;
   font: inherit;
   transition: background-color 0.2s;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
 }
 
 .download-option:hover {

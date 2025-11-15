@@ -99,6 +99,7 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
 
   // Estado del menú de descarga
   openDownloadMenu = signal<number | null>(null);
+  private menuElement?: HTMLElement;
 
   // URL base efectiva (con fallback a origin)
   public readonly baseUrl: string;
@@ -242,6 +243,9 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
     if (this.searchTimer) {
       clearTimeout(this.searchTimer);
     }
+    
+    // Cleanup: menu
+    this.removeMenu();
     
     // Cancel pending requests
     this.requestVersion++;
@@ -398,11 +402,107 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
   toggleDownloadMenu(bookId: number, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.openDownloadMenu.set(this.openDownloadMenu() === bookId ? null : bookId);
+    const isOpening = this.openDownloadMenu() !== bookId;
+    
+    if (isOpening) {
+      this.openDownloadMenu.set(bookId);
+      const target = event.target as HTMLElement;
+      const button = target.closest('.download-btn') as HTMLElement;
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        this.createMenu(bookId, rect);
+      }
+    } else {
+      this.closeDownloadMenu();
+    }
+  }
+
+  private createMenu(bookId: number, buttonRect: DOMRect): void {
+    // Eliminar menú anterior si existe
+    this.removeMenu();
+    
+    // Crear contenedor del menú
+    const menu = document.createElement('div');
+    menu.className = 'download-menu-portal';
+    menu.style.cssText = `
+      position: fixed;
+      top: ${buttonRect.bottom + 4}px;
+      left: ${buttonRect.left}px;
+      z-index: 100000;
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-width: 180px;
+      overflow: hidden;
+    `;
+    
+    // Crear botones
+    const book = this.visibleBooks().find(b => b.id === bookId);
+    if (!book) return;
+    
+    const epubBtn = document.createElement('button');
+    epubBtn.className = 'download-option';
+    epubBtn.textContent = '📖 Descargar EPUB';
+    epubBtn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: #fff;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      font: inherit;
+    `;
+    epubBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.downloadEpub(bookId, book.filename, e);
+    };
+    
+    const pdfBtn = document.createElement('button');
+    pdfBtn.className = 'download-option';
+    pdfBtn.textContent = '📄 Descargar PDF';
+    pdfBtn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: #fff;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      font: inherit;
+    `;
+    pdfBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.downloadPdf(bookId, book.filename, e);
+    };
+    
+    epubBtn.onmouseenter = () => epubBtn.style.background = '#f3f4f6';
+    epubBtn.onmouseleave = () => epubBtn.style.background = '#fff';
+    pdfBtn.onmouseenter = () => pdfBtn.style.background = '#f3f4f6';
+    pdfBtn.onmouseleave = () => pdfBtn.style.background = '#fff';
+    
+    menu.appendChild(epubBtn);
+    menu.appendChild(pdfBtn);
+    
+    document.body.appendChild(menu);
+    this.menuElement = menu;
+  }
+
+  private removeMenu(): void {
+    if (this.menuElement) {
+      this.menuElement.remove();
+      this.menuElement = undefined;
+    }
   }
 
   closeDownloadMenu(): void {
     this.openDownloadMenu.set(null);
+    this.removeMenu();
   }
 
   async downloadEpub(bookId: number, filename: string, event: Event): Promise<void> {

@@ -96,25 +96,6 @@
               {{ b.title }}
               <span class="download-icon">▼</span>
             </button>
-            <div
-              *ngIf="openDownloadMenu() === b.id"
-              class="download-menu"
-              (click)="$event.stopPropagation()">
-              <button
-                type="button"
-                class="download-option"
-                (click)="downloadEpub(b.id, b.filename, $event)"
-                [attr.aria-label]="'Descargar ' + b.title + ' en formato EPUB'">
-                📖 Descargar EPUB
-              </button>
-              <button
-                type="button"
-                class="download-option"
-                (click)="downloadPdf(b.id, b.filename, $event)"
-                [attr.aria-label]="'Descargar ' + b.title + ' en formato PDF'">
-                📄 Descargar PDF
-              </button>
-            </div>
           </div>
         </td>
         <td>{{ b.author ?? '—' }}</td>
