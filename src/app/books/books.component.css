@@ -252,6 +252,7 @@ a:focus-visible {
 .download-container {
   position: relative;
   display: inline-block;
+  z-index: 1;
 }
 
 .download-btn {
@@ -296,7 +297,7 @@ a:focus-visible {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  z-index: 200;
   min-width: 180px;
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
