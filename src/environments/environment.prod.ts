@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: window.location.origin
+  apiBaseUrl: 'https://therapy-score-discrete-reasons.trycloudflare.com'
 };
 
