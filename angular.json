@@ -51,7 +51,13 @@
                 "fonts": true
               },
               "sourceMap": false,
-              "extractLicenses": true
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
