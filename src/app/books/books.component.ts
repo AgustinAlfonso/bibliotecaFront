@@ -57,8 +57,14 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
   // Filtros
   search = signal<string>('');         // busca por título o autor (server-side)
   genreFilter = signal<string>('');
+  genreDropdownOpen = signal<boolean>(false);
   letterFilter = signal<string>('');   // '', '#', 'A'..'Z'
   readonly letters = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'] as const;
+
+  // Computed: hay filtros activos?
+  hasActiveFilters = computed(() => {
+    return !!(this.search() || this.genreFilter() || this.letterFilter());
+  });
 
   // Géneros
   taxoLoading = signal(true);
@@ -87,6 +93,9 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
     }
     return out;
   });
+
+  // Página realmente visible basada en el scroll
+  visiblePage = signal(1);
 
   // debounce search
   private searchTimer?: ReturnType<typeof setTimeout>;
@@ -176,9 +185,84 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
     this.resetAndLoad();
   }
 
+  selectGenre(genre: string) {
+    this.genreFilter.set(genre || '');
+    this.genreDropdownOpen.set(false);
+    this.resetAndLoad();
+  }
+
+  toggleGenreDropdown() {
+    this.genreDropdownOpen.update(v => !v);
+  }
+
+  closeGenreDropdown() {
+    this.genreDropdownOpen.set(false);
+  }
+
   clearGenre() {
     this.genreFilter.set('');
     this.resetAndLoad();
+  }
+
+  clearAllFilters() {
+    this.search.set('');
+    this.genreFilter.set('');
+    this.letterFilter.set('');
+    this.resetAndLoad();
+  }
+
+  private updateVisiblePage() {
+    const el = this.scrollerRef?.nativeElement;
+    if (!el || !this.visibleBooks().length) {
+      this.visiblePage.set(1);
+      return;
+    }
+
+    // Calcular qué página está visible basándome en el scroll
+    const scrollTop = el.scrollTop;
+    const clientHeight = el.clientHeight;
+    const scrollHeight = el.scrollHeight;
+    
+    // Si estamos al inicio, es la página 1
+    if (scrollTop < 100) {
+      this.visiblePage.set(1);
+      return;
+    }
+    
+    // Calcular qué porcentaje del contenido se ha scrolleado
+    const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
+    
+    // Calcular qué página corresponde a ese porcentaje
+    const currentP = this.currentPage();
+    const totalPages = Math.ceil(this.total() / this.pageSize);
+    
+    // visibleBooks contiene páginas [p-1, p, p+1]
+    // Calcular en qué parte del rango visible estamos
+    const booksPerPage = this.pageSize;
+    const totalVisibleBooks = this.visibleBooks().length;
+    
+    // Estimar qué índice de libro está en el viewport
+    // Usar una altura aproximada de fila (ajustar según necesidad)
+    const estimatedRowHeight = scrollHeight / totalVisibleBooks;
+    const visibleStartIndex = Math.floor(scrollTop / estimatedRowHeight);
+    
+    // Calcular qué página corresponde
+    let calculatedPage = currentP;
+    if (visibleStartIndex < booksPerPage) {
+      // Está en la página anterior (p-1)
+      calculatedPage = Math.max(1, currentP - 1);
+    } else if (visibleStartIndex < booksPerPage * 2) {
+      // Está en la página actual (p)
+      calculatedPage = currentP;
+    } else if (visibleStartIndex < booksPerPage * 3) {
+      // Está en la página siguiente (p+1)
+      calculatedPage = Math.min(totalPages, currentP + 1);
+    } else {
+      // Por defecto, usar currentPage
+      calculatedPage = currentP;
+    }
+    
+    this.visiblePage.set(calculatedPage);
   }
 
   toggleLetter(l: string) {
@@ -211,17 +295,24 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
     );
     this.ioBottom.observe(this.bottomSentinelRef.nativeElement);
 
-    // cargar hacia arriba cuando estás cerca del top
+    // cargar hacia arriba cuando estás cerca del top y actualizar página visible
     this.scrollHandler = () => {
       const el = this.scrollerRef.nativeElement;
       if (el.scrollTop <= this.NEAR_TOP_PX && this.currentPage() > 1) {
         this.queuePrevWork();
       }
+      this.updateVisiblePage();
     };
     root.addEventListener('scroll', this.scrollHandler, { passive: true });
+    
+    // Actualizar página visible inicialmente
+    setTimeout(() => this.updateVisiblePage(), 100);
 
-    // Cerrar menú de descarga al hacer click fuera
-    this.documentClickHandler = () => this.closeDownloadMenu();
+    // Cerrar menú de descarga y dropdown de géneros al hacer click fuera
+    this.documentClickHandler = () => {
+      this.closeDownloadMenu();
+      this.closeGenreDropdown();
+    };
     document.addEventListener('click', this.documentClickHandler);
   }
 
@@ -255,6 +346,7 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
   /* ========== Reset + carga p1 ========== */
   private resetAndLoad() {
     this.currentPage.set(1);
+    this.visiblePage.set(1);
     this.total.set(0);
     this.cache.set(new Map());
     if (this.scrollerRef?.nativeElement) {
@@ -430,9 +522,9 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
       left: ${buttonRect.left}px;
       z-index: 100000;
       background: #ffffff;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #586D51;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(88, 109, 81, 0.3);
       min-width: 180px;
       overflow: hidden;
     `;
@@ -452,8 +544,10 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
       border: none;
       text-align: left;
       cursor: pointer;
-      color: #333;
+      color: #586D51;
       font: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
     `;
     epubBtn.onclick = (e) => {
       e.preventDefault();
@@ -472,8 +566,10 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
       border: none;
       text-align: left;
       cursor: pointer;
-      color: #333;
+      color: #586D51;
       font: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
     `;
     pdfBtn.onclick = (e) => {
       e.preventDefault();
@@ -481,10 +577,22 @@ export class BooksComponent implements AfterViewInit, OnDestroy {
       this.downloadPdf(bookId, book.filename, e);
     };
     
-    epubBtn.onmouseenter = () => epubBtn.style.background = '#f3f4f6';
-    epubBtn.onmouseleave = () => epubBtn.style.background = '#fff';
-    pdfBtn.onmouseenter = () => pdfBtn.style.background = '#f3f4f6';
-    pdfBtn.onmouseleave = () => pdfBtn.style.background = '#fff';
+    epubBtn.onmouseenter = () => {
+      epubBtn.style.background = '#E8F0E5';
+      epubBtn.style.color = '#45523D';
+    };
+    epubBtn.onmouseleave = () => {
+      epubBtn.style.background = '#fff';
+      epubBtn.style.color = '#586D51';
+    };
+    pdfBtn.onmouseenter = () => {
+      pdfBtn.style.background = '#E8F0E5';
+      pdfBtn.style.color = '#45523D';
+    };
+    pdfBtn.onmouseleave = () => {
+      pdfBtn.style.background = '#fff';
+      pdfBtn.style.color = '#586D51';
+    };
     
     menu.appendChild(epubBtn);
     menu.appendChild(pdfBtn);

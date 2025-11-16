@@ -6,7 +6,10 @@
   </div>
 
   <header class="topbar">
-    <h1>📚 Biblioteca</h1>
+    <h1>
+      <img src="assets/images/libros.png" alt="Libros apilados" class="title-icon" />
+      La Totalidad De Todo Lo Jamás Escrito
+    </h1>
 
     <div class="filters">
       <!-- Buscador (título o autor) -->
@@ -21,37 +24,62 @@
           autocomplete="off"
           aria-label="Buscar libros por título o autor"
         />
-        <button
-          *ngIf="search()"
-          class="clear-x"
-          (click)="clearSearch()"
-          aria-label="Limpiar búsqueda"
-          type="button">✕</button>
       </div>
 
       <!-- Género -->
       <div class="ac">
         <label for="genre-select">Género</label>
-        <select
-          id="genre-select"
-          [disabled]="taxoLoading() || genres().length === 0"
-          [value]="genreFilter()"
-          (change)="onGenreChange($event)"
-          aria-label="Filtrar por género">
-          <option value="">Todos</option>
-          <option *ngFor="let g of genres(); trackBy: trackByText" [value]="g">{{ g }}</option>
-        </select>
-        <button
-          *ngIf="genreFilter()"
-          class="clear-x"
-          (click)="clearGenre()"
-          aria-label="Limpiar filtro de género"
-          type="button">✕</button>
+        <div class="custom-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            id="genre-select"
+            class="dropdown-button"
+            [disabled]="taxoLoading() || genres().length === 0"
+            (click)="toggleGenreDropdown()"
+            [attr.aria-expanded]="genreDropdownOpen()"
+            aria-label="Filtrar por género"
+            aria-haspopup="listbox">
+            {{ genreFilter() || 'Todos' }}
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <ul
+            *ngIf="genreDropdownOpen() && !taxoLoading() && genres().length > 0"
+            class="dropdown-menu"
+            role="listbox">
+            <li
+              role="option"
+              class="dropdown-option"
+              [class.active]="!genreFilter()"
+              (click)="selectGenre('')"
+              [attr.aria-selected]="!genreFilter()">
+              Todos
+            </li>
+            <li
+              *ngFor="let g of genres(); trackBy: trackByText"
+              role="option"
+              class="dropdown-option"
+              [class.active]="genreFilter() === g"
+              (click)="selectGenre(g)"
+              [attr.aria-selected]="genreFilter() === g">
+              {{ g }}
+            </li>
+          </ul>
+        </div>
       </div>
+
+      <!-- Botón Limpiar Filtros -->
+      <button
+        type="button"
+        class="clear-filters-btn"
+        [disabled]="!hasActiveFilters()"
+        (click)="clearAllFilters()"
+        aria-label="Limpiar todos los filtros">
+        Limpiar filtros
+      </button>
     </div>
 
     <div class="meta">
-      <span>Pág. {{ currentPage() }} · Mostrando {{ visibleBooks().length }} / {{ total() | number }}</span>
+      <span>Pág. {{ visiblePage() }} · Mostrando {{ visibleBooks().length }} / {{ total() | number }}</span>
     </div>
   </header>
 
