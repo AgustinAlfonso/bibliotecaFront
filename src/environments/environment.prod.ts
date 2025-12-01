@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://declined-feeding-elsewhere-expects.trycloudflare.com'
+  apiBaseUrl: 'https://hosting-nikon-phd-sociology.trycloudflare.com'
 };
 
