@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://picking-martial-conf-aim.trycloudflare.com'
+  apiBaseUrl: 'https://showing-euros-mono-tuesday.trycloudflare.com'
 };
