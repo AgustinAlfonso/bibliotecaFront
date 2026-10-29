@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://showing-euros-mono-tuesday.trycloudflare.com'
+  apiBaseUrl: 'https://plans-sink-enabled-end.trycloudflare.com'
 };
